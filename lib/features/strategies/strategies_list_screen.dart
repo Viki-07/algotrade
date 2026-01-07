@@ -13,6 +13,9 @@ class StrategiesListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isNarrow = width < 600;
+
     return StreamBuilder<List<Strategy>>(
       stream: ref.watch(strategiesStreamProvider),
       builder: (context, snapshot) {
@@ -25,7 +28,7 @@ class StrategiesListScreen extends ConsumerWidget {
         final items = snapshot.data ?? const <Strategy>[];
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isNarrow ? 12 : 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -57,13 +60,15 @@ class _StrategyCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isNarrow = width < 600;
     final running = strategy.status == StrategyStatus.running;
 
     final pnl = strategy.currentPnl;
     final pnlColor = pnl >= 0 ? Colors.green.shade700 : Colors.red.shade700;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 300, maxWidth: 420),
+      constraints: BoxConstraints(minWidth: 0, maxWidth: isNarrow ? double.infinity : 420),
       child: Card(
         elevation: 0,
         color: theme.colorScheme.surfaceContainerLowest,

@@ -31,7 +31,9 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.sizeOf(context).width >= 1100;
+    final width = MediaQuery.sizeOf(context).width;
+    final isWide = width >= 1100;
+    final isNarrow = width < 520;
     final location = GoRouterState.of(context).uri.toString();
     final active = _activeForLocation(location);
 
@@ -51,18 +53,26 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(active.label),
+        title: Text(active.label, overflow: TextOverflow.ellipsis),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: FilledButton.tonalIcon(
-              onPressed: () {
-                ref.read(authControllerProvider.notifier).logout();
-              },
-              icon: const Icon(Icons.logout_outlined),
-              label: const Text('Logout'),
-            ),
-          ),
+            child: isNarrow
+                ? IconButton(
+                    tooltip: 'Logout',
+                    onPressed: () {
+                      ref.read(authControllerProvider.notifier).logout();
+                    },
+                    icon: const Icon(Icons.logout_outlined),
+                  )
+                : FilledButton.tonalIcon(
+                    onPressed: () {
+                      ref.read(authControllerProvider.notifier).logout();
+                    },
+                    icon: const Icon(Icons.logout_outlined),
+                    label: const Text('Logout'),
+                  ),
+          )
         ],
       ),
       drawer: isWide
