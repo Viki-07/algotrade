@@ -57,45 +57,27 @@ class AllocationPieChart extends StatelessWidget {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth.isFinite && constraints.maxWidth < 520;
-
-        final chart = PieChart(
-          PieChartData(
-            sectionsSpace: 2,
-            centerSpaceRadius: 38,
-            sections: sections,
-            pieTouchData: PieTouchData(
-              enabled: true,
-              touchCallback: (event, response) {},
+    return Row(
+      children: [
+        Expanded(
+          child: PieChart(
+            PieChartData(
+              sectionsSpace: 2,
+              centerSpaceRadius: 38,
+              sections: sections,
+              pieTouchData: PieTouchData(
+                enabled: true,
+                touchCallback: (event, response) {},
+              ),
             ),
           ),
-        );
-
-        final legend = _Legend(entries: entries, palette: palette);
-
-        if (isNarrow) {
-          return Column(
-            children: [
-              SizedBox(height: 220, child: chart),
-              const SizedBox(height: 12),
-              legend,
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            Expanded(child: chart),
-            const SizedBox(width: 12),
-            SizedBox(
-              width: 170,
-              child: legend,
-            ),
-          ],
-        );
-      },
+        ),
+        const SizedBox(width: 12),
+        SizedBox(
+          width: 170,
+          child: _Legend(entries: entries, palette: palette),
+        ),
+      ],
     );
   }
 }

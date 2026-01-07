@@ -16,13 +16,11 @@ class PositionsOrdersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final positionsStream = ref.watch(positionsStreamProvider);
     final ordersStream = ref.watch(ordersStreamProvider);
-    final width = MediaQuery.sizeOf(context).width;
-    final isNarrow = width < 600;
 
     return DefaultTabController(
       length: 2,
       child: Padding(
-        padding: EdgeInsets.all(isNarrow ? 12 : 16),
+        padding: const EdgeInsets.all(16),
         child: Panel(
           title: 'Positions & Orders',
           child: Column(
