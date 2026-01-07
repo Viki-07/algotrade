@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/models/dashboard_metrics.dart';
+import '../../core/models/position.dart';
 import '../../core/providers.dart';
 import '../../shared/widgets/app_feedback.dart';
+import '../../shared/widgets/allocation_pie_chart.dart';
 import '../../shared/widgets/equity_chart.dart';
 import '../../shared/widgets/kpi_tile.dart';
 import '../../shared/widgets/panel.dart';
@@ -18,6 +20,7 @@ class DashboardScreen extends ConsumerWidget {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= 1100;
     final isMedium = width >= 800;
+    final positionsStream = ref.watch(positionsStreamProvider);
 
     return StreamBuilder<DashboardMetrics>(
       stream: ref.watch(dashboardMetricsStreamProvider),
@@ -156,9 +159,44 @@ class DashboardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Panel(
-                      title: 'Live Updates',
-                      child: _LiveUpdatesHint(),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Panel(
+                            title: 'Allocation (by symbol)',
+                            child: SizedBox(
+                              height: 260,
+                              child: StreamBuilder<List<Position>>(
+                                stream: positionsStream,
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasError) {
+                                    return AppError(message: snapshot.error.toString());
+                                  }
+                                  if (!snapshot.hasData) {
+                                    return const AppLoader(message: 'Loading allocation...');
+                                  }
+
+                                  final weights = _allocationWeights(snapshot.data ?? const <Position>[]);
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    child: AllocationPieChart(weights: weights),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          flex: 2,
+                          child: Panel(
+                            title: 'Live Updates',
+                            child: _LiveUpdatesHint(),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 )
@@ -183,6 +221,30 @@ class DashboardScreen extends ConsumerWidget {
                             realized: m?.realizedPnl ?? 0,
                             unrealized: m?.unrealizedPnl ?? 0,
                           ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Panel(
+                      title: 'Allocation (by symbol)',
+                      child: SizedBox(
+                        height: 240,
+                        child: StreamBuilder<List<Position>>(
+                          stream: positionsStream,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return AppError(message: snapshot.error.toString());
+                            }
+                            if (!snapshot.hasData) {
+                              return const AppLoader(message: 'Loading allocation...');
+                            }
+
+                            final weights = _allocationWeights(snapshot.data ?? const <Position>[]);
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: AllocationPieChart(weights: weights),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -216,6 +278,15 @@ class DashboardScreen extends ConsumerWidget {
       points.add(base + (end - base) * t);
     }
     return points;
+  }
+
+  static Map<String, double> _allocationWeights(List<Position> positions) {
+    final map = <String, double>{};
+    for (final p in positions) {
+      final signedQty = p.side == Side.sell ? -p.qty : p.qty;
+      map[p.symbol] = (map[p.symbol] ?? 0) + (signedQty * p.ltp);
+    }
+    return map;
   }
 }
 
